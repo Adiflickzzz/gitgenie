@@ -1,8 +1,11 @@
 "use client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import useRefetch from "@/hooks/use-refetch";
+import { api } from "@/trpc/react";
 import React from "react";
 import { useForm } from "react-hook-form";
+import { toast } from "sonner";
 
 type FormInput = {
   repoUrl: string;
@@ -11,9 +14,27 @@ type FormInput = {
 };
 const CreatePage = () => {
   const { register, handleSubmit, reset } = useForm<FormInput>();
+  const createProject = api.project.createProject.useMutation();
+  const refetch = useRefetch();
 
   function onsubmit(data: FormInput) {
-    console.log(JSON.stringify(data, null, 2));
+    createProject.mutate(
+      {
+        name: data.projectName,
+        githubUrl: data.repoUrl,
+        githubToken: data.githubToken,
+      },
+      {
+        onSuccess: () => {
+          toast.success("Project created successfully");
+          refetch();
+          reset();
+        },
+        onError: () => {
+          toast.error("Failed to create project");
+        },
+      },
+    );
     return true;
   }
   return (
@@ -53,7 +74,11 @@ const CreatePage = () => {
                 placeholder="Github Token (Optional)"
                 className="w-full text-xs"
               />
-              <Button type="submit" className="mt-4">
+              <Button
+                type="submit"
+                className="mt-4"
+                disabled={createProject.isPending}
+              >
                 Create project
               </Button>
             </div>
