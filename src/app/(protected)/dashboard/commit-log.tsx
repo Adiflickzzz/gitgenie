@@ -8,14 +8,18 @@ import React from "react";
 const CommitLog = () => {
   const { project, projectId } = useProject();
   const { data: commits } = api.project.getCommits.useQuery({ projectId });
+  const filterCommits = commits?.sort(
+    (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+  );
   return (
     <>
       <ul className="space-y-6">
-        {commits?.map((commit, commitIdx) => {
+        {filterCommits?.map((commit, commitIdx) => {
           return (
             <li key={commit.id} className="relative flex gap-x-4">
               <div
                 className={cn(
+                  //@ts-ignore
                   commitIdx === commits.length - 1 ? "h-0" : "-bottom-6",
                   "absolute left-0 top-0 flex w-6 justify-center",
                 )}
