@@ -48,18 +48,6 @@ const items = [
   },
 ];
 
-const projects = [
-  {
-    name: "Project 1",
-  },
-  {
-    name: "Project 2",
-  },
-  {
-    name: "Project 3",
-  },
-];
-
 export function AppSidebar() {
   const pathname = usePathname();
   const { open } = useSidebar();
@@ -119,6 +107,7 @@ export function AppSidebar() {
                         onClick={() => {
                           setProjectId(project.id);
                         }}
+                        className="cursor-pointer"
                       >
                         <div
                           className={cn(
