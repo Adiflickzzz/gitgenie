@@ -65,6 +65,8 @@ export const pollCommits = async (projectId: string) => {
     return "Failed to load the summary";
   });
 
+  console.log(summaryResponses, summariseCommit, summaries);
+
   const commits = await db.commit.createMany({
     data: summaries.map((summary, index) => {
       return {

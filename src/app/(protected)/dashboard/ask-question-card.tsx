@@ -11,20 +11,34 @@ import useProject from "@/hooks/use-project";
 import Image from "next/image";
 import React, { useState } from "react";
 import { askQuestion } from "./actions";
+import { readStreamableValue } from "ai/rsc";
 
 const AskQuestionCard = () => {
   const { project } = useProject();
   const [open, setOpen] = useState(false);
-  const [question, setQuestion] = useState();
-  const [loading, setLoading] = useState();
+  const [question, setQuestion] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [fileReferences, setFileReferences] = useState<
+    { filename: string; sourceCode: string; summary: string }[]
+  >([]);
+  const [answer, setAnswer] = useState("");
 
   const onSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!project?.id) return;
-    setLoading;
+    setLoading(true);
     setOpen(true);
 
     const { output } = await askQuestion(question, project.id);
+    setFileReferences(fileReferences);
+
+    for await (const delta of readStreamableValue(output)) {
+      if (delta) {
+        setAnswer((ans) => ans + delta);
+      }
+    }
+
+    setLoading(false);
   };
   return (
     <>
@@ -35,6 +49,11 @@ const AskQuestionCard = () => {
               <Image src="logo.svg" alt="GitGenie" width={32} height={32} />
             </DialogTitle>
           </DialogHeader>
+          {answer}
+          <h1>File Refernces</h1>
+          {fileReferences.map((file) => {
+            return <div>{file.filename}</div>;
+          })}
         </DialogContent>
       </Dialog>
       <Card className="realtive col-span-3">
@@ -46,7 +65,7 @@ const AskQuestionCard = () => {
             <Textarea
               placeholder="Which file should I edit to chaneg the home page?"
               value={question}
-              onChange={(e) => e.target.value}
+              onChange={(e) => setQuestion(e.target.value)}
             />
             <div className="h-4"></div>
             <Button type="submit">Ask Gitgenie !</Button>
