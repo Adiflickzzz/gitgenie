@@ -19,7 +19,7 @@ const AskQuestionCard = () => {
   const [question, setQuestion] = useState("");
   const [loading, setLoading] = useState(false);
   const [fileReferences, setFileReferences] = useState<
-    { filename: string; sourceCode: string; summary: string }[]
+    { filename?: string; sourceCode: string; summary: string }[]
   >([]);
   const [answer, setAnswer] = useState("");
 
@@ -29,8 +29,10 @@ const AskQuestionCard = () => {
     setLoading(true);
     setOpen(true);
 
-    const { output } = await askQuestion(question, project.id);
-    setFileReferences(fileReferences);
+    const { output, fileRefrences } = await askQuestion(question, project.id);
+    setFileReferences(fileRefrences);
+
+    console.log(output);
 
     for await (const delta of readStreamableValue(output)) {
       if (delta) {

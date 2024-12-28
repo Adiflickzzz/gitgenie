@@ -39,7 +39,7 @@ model Project {
 
     UserToProjects      UserToProject[]
     commits             Commit[]
-    sourceCodeEmbedding sourceCodeEmbedding[]
+    SourceCodeEmbedding SourceCodeEmbedding[]
 }
 
 model UserToProject {
@@ -51,12 +51,12 @@ model UserToProject {
     projectId String
 
     user    User    @relation(fields: [userId], references: [id])
-    project Project @relation(fields: [projectId], references: [id])
+    project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
 
     @@unique([userId, projectId])
 }
 
-model sourceCodeEmbedding {
+model SourceCodeEmbedding {
     id String @id @default(cuid())
 
     summaryEmbedding Unsupported("vector(768)")?
@@ -65,7 +65,7 @@ model sourceCodeEmbedding {
     summary          String
 
     projectId String
-    project   Project @relation(fields: [projectId], references: [id])
+    project   Project @relation(fields: [projectId], references: [id],onDelete: Cascade)
 }
 
 model Commit {
@@ -74,7 +74,7 @@ model Commit {
     updatedAt DateTime @updatedAt
 
     projectId String
-    project   Project @relation(fields: [projectId], references: [id])
+    project   Project @relation(fields: [projectId], references: [id],onDelete: Cascade)
 
     commitMessage      String
     commitHash         String

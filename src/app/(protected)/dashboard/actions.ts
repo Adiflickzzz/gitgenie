@@ -4,6 +4,7 @@ import { createStreamableValue } from "ai/rsc";
 import { createGoogleGenerativeAI } from "@ai-sdk/google";
 import { db } from "@/server/db";
 import { generateEmbedding } from "@/lib/gemini";
+import { currentUser } from "@clerk/nextjs/server";
 
 const google = createGoogleGenerativeAI({
   apiKey: process.env.GEMINI_API_KEY,
@@ -22,8 +23,10 @@ export async function askQuestion(question: string, projectId: string) {
   WHERE 1 - ("summaryEmbedding" <=> ${vectorQuery}::vector) > .5
   AND "projectId" = ${projectId}
   ORDER BY similarity DESC
-  LIMIY 10
+  LIMIT 10
   `) as { fileName: string; sourceCode: string; summary: string }[];
+
+  console.log("The files refered", result.length);
 
   let context = "";
 
@@ -69,5 +72,20 @@ export async function askQuestion(question: string, projectId: string) {
     stream.done();
   })();
 
-  return { output: stream, fileRefrences: result };
+  return { output: stream.value, fileRefrences: result };
+}
+
+export async function DeleteProject(projectId: string) {
+  const user = currentUser();
+  if (!user) {
+    throw new Error("Unauthorised");
+  }
+
+  if (!projectId) return;
+
+  await db.project.delete({
+    where: {
+      id: projectId,
+    },
+  });
 }

@@ -1,3 +1,4 @@
+
 import { db } from "@/server/db";
 import { GithubRepoLoader } from "@langchain/community/document_loaders/web/github";
 import { Document } from "@langchain/core/documents";
@@ -40,14 +41,13 @@ export const indexGithubRepo = async (
         data: {
           summary: embedding.summary,
           sourceCode: embedding.sourceCode,
-          //@ts-ignore
           fileName: embedding.fileName,
           projectId,
         },
       });
 
       await db.$executeRaw`
-      UPDATE "sourceCodeEmbedding"
+      UPDATE "SourceCodeEmbedding"
       SET "summaryEmbedding" = ${embedding.embedding}::vector
       WHERE "id" = ${sourceCodeEmbedding.id}
       `;
@@ -55,11 +55,7 @@ export const indexGithubRepo = async (
   );
 };
 
-const generateEmbeddings = async (
-  docs: Document[],
-): Promise<
-  Array<{ summary: string; embedding: number[]; sourceCode: string }>
-> => {
+const generateEmbeddings = async (docs: Document[]) => {
   return await Promise.all(
     docs.map(async (doc) => {
       const summary = await summariseCode(doc);

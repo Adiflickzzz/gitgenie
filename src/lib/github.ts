@@ -1,5 +1,6 @@
 import { db } from "@/server/db";
 import { Octokit } from "octokit";
+import pLimit from "p-limit";
 
 import axios from "axios";
 import { AiSummarizeCommit } from "./gemini";
@@ -51,18 +52,15 @@ export const pollCommits = async (projectId: string) => {
     projectId,
     commitHashes,
   );
-  const summaryResponses = await Promise.allSettled(
+
+  const summaryResponses = await Promise.all(
     unprocessedCommits.map((commit) => {
-      return summariseCommit(githubUrl, commit.commitHash);
+      return summariseCommit(githubUrl, commit.commitHash) || "";
     }),
   );
 
   const summaries = summaryResponses.map((response) => {
-    if (response.status === "fulfilled") {
-      return response.value as string;
-    }
-
-    return "Failed to load the summary";
+    return response;
   });
 
   console.log(summaryResponses, summariseCommit, summaries);
@@ -76,7 +74,7 @@ export const pollCommits = async (projectId: string) => {
         commitAuthorName: unprocessedCommits[index]!.commitAuthor,
         commitAuthorAvatar: unprocessedCommits[index]!.commitAuthorAvatar,
         commitDate: unprocessedCommits[index]!.commitDate,
-        summary,
+        summary: summary !== undefined ? summary : "",
       };
     }),
   });
@@ -90,7 +88,7 @@ async function summariseCommit(githubUrl: string, commitHash: string) {
     },
   });
 
-  return (await AiSummarizeCommit(data)) || "";
+  return ((await AiSummarizeCommit(data)) as string) || "";
 }
 
 async function fetchProjectGithubUrl(projectId: string) {
